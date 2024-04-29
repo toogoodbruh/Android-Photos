@@ -16,7 +16,7 @@ import android.Manifest;
 import androidx.core.content.ContextCompat;
 import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
-
+import android.util.Log;
 
 
 import java.io.BufferedReader;
@@ -195,7 +195,7 @@ public class AlbumView extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == READ_REQUEST_CODE  && resultCode  == RESULT_OK && data != null) {
+        if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             // Ensure imgAdapter is initialized
             if (imgAdapter == null) {
                 imgAdapter = new ImageAdapter(this);
@@ -205,23 +205,28 @@ public class AlbumView extends AppCompatActivity {
             Photo picture = new Photo(data.getData());
             Uri imageUri = data.getData();
 
+            // Gain permission to access the URI
+            getContentResolver().takePersistableUriPermission(imageUri,
+                    (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
+
             imgAdapter.add(imageUri);
             gridView.setAdapter(imgAdapter);
             album.list.add(picture);
             write();
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_PERMISSIONS) {
-            // If request is cancelled, the grantResults array is empty
+            // Log the permission grant result
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission was granted
-                // Proceed with the operation that requires this permission
+                // Permission granted
+                Log.d("Permission", "READ_EXTERNAL_STORAGE permission granted");
             } else {
                 // Permission denied
-                // Handle the case where the user denies the permission
+                Log.d("Permission", "READ_EXTERNAL_STORAGE permission denied");
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
@@ -253,6 +258,7 @@ public class AlbumView extends AppCompatActivity {
                 }
 
                 gridView.setAdapter(imgAdapter);
+                Log.d("Read", "Data read successfully");
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
