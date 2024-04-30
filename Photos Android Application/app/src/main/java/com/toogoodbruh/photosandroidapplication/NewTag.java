@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+import android.util.Log;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,7 +26,7 @@ public class NewTag extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_tag);
-
+        Log.d("startup", "startup text");
         rg = (RadioGroup) findViewById(R.id.radiogroup);
 
         loc = (RadioButton) findViewById(R.id.location);
@@ -45,67 +46,88 @@ public class NewTag extends AppCompatActivity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d("NewTag", "Add tag button clicked"); // Add this log statement
                 ArrayList<String> tags = new ArrayList<>();
 
-                for (Tag t: AlbumView.imgAdapter.uris.get(SlideShowView.index).tags) {
-                    if (!(tags.contains(t.toString()))){
-                        tags.add(t.toString());
+                int index = SlideShowView.index; // Store the index in a local variable for debugging
+                // Log the index value
+                Log.d("NewTag", "Index value: " + index);
+
+                // Log the index value
+                Log.d("NewTag", "Index value: " + index);
+
+                // Check if SlideShowView.index is within a valid range
+                if (index >= 0 && index < AlbumView.imgAdapter.uris.size()) {
+                    for (Tag t: AlbumView.imgAdapter.uris.get(index).tags) {
+                        if (!(tags.contains(t.toString()))){
+                            tags.add(t.toString());
+                        }
                     }
-                }
 
-                type = rg.getCheckedRadioButtonId();
-                if (!tagData.getText().toString().equals("")) {
-                    switch (type) {
-                        case 2131165275:
-                            if (tags.contains("Location=" + tagData.getText().toString())) {
-                                Toast.makeText(getApplicationContext(), "This tag already exists", Toast.LENGTH_SHORT).show();
-                            } else {
-                                AlbumView.imgAdapter.uris.get(SlideShowView.index).addTag("Location=" + tagData.getText().toString()); SlideShowView.gridView.setAdapter(SlideShowView.tagAdapter);
-                                write();
-                                finish();
-                            }
+                    type = rg.getCheckedRadioButtonId();
+                    String tagDataText = tagData.getText().toString(); // Retrieve the tag data from the EditText field
+                    Log.d("NewTag", "Tag data input: " + tagDataText); // Log the tag data to check if it's retrieved correctly
 
-                            break;
-                        case 2131165294:
-                            if (tags.contains("Person=" + tagData.getText().toString())) {
-                                Toast.makeText(getApplicationContext(), "This tag already exists", Toast.LENGTH_SHORT).show();
-                            }
-                            else {
-                                AlbumView.imgAdapter.uris.get(SlideShowView.index).addTag("Person=" + tagData.getText().toString());
-                                SlideShowView.gridView.setAdapter(SlideShowView.tagAdapter);
-                                write();
-                                finish();
-                            }
-                            break;
-                        default:
-                            break;
-
+                    if (!tagDataText.equals("")) {
+                        switch (type) {
+                            case 2131165275:
+                                if (tags.contains("Location=" + tagData.getText().toString())) {
+                                    Toast.makeText(getApplicationContext(), "This tag already exists", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    AlbumView.imgAdapter.uris.get(index).addTag("Location=" + tagData.getText().toString());
+                                    SlideShowView.tagAdapter.notifyDataSetChanged();
+                                    write();
+                                    Log.d("NewTag", "Location tag added: " + tagData.getText().toString());
+                                    setResult(RESULT_OK);
+                                    finish();
+                                }
+                                break;
+                            case 2131165294:
+                                if (tags.contains("Person=" + tagData.getText().toString())) {
+                                    Toast.makeText(getApplicationContext(), "This tag already exists", Toast.LENGTH_SHORT).show();
+                                    Log.d("NewTag", "Person tag already exists: " + tagData.getText().toString());
+                                } else {
+                                    AlbumView.imgAdapter.uris.get(index).addTag("Person=" + tagData.getText().toString());
+                                    SlideShowView.tagAdapter.notifyDataSetChanged();
+                                    write();
+                                    Log.d("NewTag", "Person tag added: " + tagData.getText().toString());
+                                    write();
+                                    setResult(RESULT_OK);
+                                    finish();
+                                }
+                                break;
+                            default:
+                                break;
+                        }
                     }
+                } else {
+                    Log.e("NewTag", "Invalid index value: " + index);
                 }
             }
         });
+
+
     }
 
     public void write(){
         try {
             ArrayList<Photo> uris = AlbumView.imgAdapter.getPhotos();
 
-            String str = "";
-            FileOutputStream fileOutputStream = openFileOutput(HomeScreen.albumName+".list", MODE_PRIVATE);
-            for (Photo u : uris) {
-                if (str.equals("")) {
-                    str = u.getUri().toString();
+            FileOutputStream fileOutputStream = openFileOutput(HomeScreen.albumName + ".list", MODE_APPEND); // Open the file in append mode
 
-                }
-                else {
-                    str = str + "\n" + u.getUri().toString();
-                }
+            for (Photo u : uris) {
+                // Construct the string containing the URI and associated tags
+                String str = u.getUri().toString();
                 for (Tag t : u.tags){
                     str = str + "\nTAG:" + t.toString();
                 }
+                // Append the string to the file
+                fileOutputStream.write(str.getBytes());
+                fileOutputStream.write("\n".getBytes()); // Add a newline character to separate data for each photo
+                Log.d("write()", "Data appended: " + str);
             }
-            fileOutputStream.write(str.getBytes());
 
+            fileOutputStream.close(); // Close the file output stream
         }
         catch(FileNotFoundException e){
             e.printStackTrace();
@@ -117,4 +139,5 @@ public class NewTag extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
 }

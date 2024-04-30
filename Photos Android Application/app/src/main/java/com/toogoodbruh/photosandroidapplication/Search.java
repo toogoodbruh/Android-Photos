@@ -109,7 +109,6 @@ public class Search extends AppCompatActivity {
     }
 
     public void read() {
-        String[] strings = {};
         ArrayList<String> masterList = new ArrayList<>();
 
         try {
@@ -131,11 +130,21 @@ public class Search extends AppCompatActivity {
                     InputStreamReader inputStreamReader2 = new InputStreamReader(fileInputStream2);
                     BufferedReader bufferedReader2 = new BufferedReader(inputStreamReader2);
 
+                    Photo photo = null; // Initialize a Photo object
+
                     while ((lineIn = bufferedReader2.readLine()) != null) {
-                        masterList.add(lineIn);
+                        if (lineIn.substring(0, 4).equals("TAG:")) {
+                            // Ensure a photo object is created before adding tags
+                            if (photo != null) {
+                                photo.addTag(lineIn.substring(4));
+                            }
+                        } else {
+                            // Create a new Photo object and add it to the searched list
+                            Uri uri = Uri.parse(lineIn);
+                            photo = new Photo(uri);
+                            searched.add(photo);
+                        }
                     }
-
-
                 }
                 catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -144,23 +153,13 @@ public class Search extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-
-            for (String input: masterList) {
-                if (input.substring(0,4).equals("TAG:")) {
-                    searched.get(searched.size() - 1).addTag(input.substring(4));
-                }
-                else {
-                    searched.add(new Photo(Uri.parse(input)));
-                }
-            }
-            if(true){}
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
+
 
     public void write(){
         try {

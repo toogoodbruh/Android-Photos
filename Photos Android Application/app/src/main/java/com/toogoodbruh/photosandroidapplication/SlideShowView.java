@@ -112,7 +112,13 @@ public class SlideShowView extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
+        add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(SlideShowView.this, NewTag.class);
+                startActivityForResult(intent, 1); // Use startActivityForResult()
+            }
+        });
         prev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -204,6 +210,17 @@ public class SlideShowView extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                // Handle the result from NewTag activity if needed
+                // For example, you can update the UI or perform any other actions
+            }
+        }
+    }
+
     // Override onOptionsItemSelected to handle back button click event
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -216,6 +233,21 @@ public class SlideShowView extends AppCompatActivity {
     }
 
     // Method to update tags TextView
+    /*private void updateTags() {
+        // Check if there are tags associated with the current image
+        if (AlbumView.imgAdapter.uris.get(index).tags.size() > 0) {
+            StringBuilder tagsBuilder = new StringBuilder("Tags:\n");
+            for (Tag tag : AlbumView.imgAdapter.uris.get(index).tags) {
+                tagsBuilder.append(tag.getData()).append("\n");
+            }
+            // Set the text of the tag TextView
+            tagTextView.setText(tagsBuilder.toString());
+            tagTextView.setVisibility(View.VISIBLE);
+        } else {
+            // If there are no tags, hide the tag TextView
+            tagTextView.setVisibility(View.GONE);
+        }
+    }*/
     private void updateTags() {
         // Check if there are tags associated with the current image
         if (AlbumView.imgAdapter.uris.get(index).tags.size() > 0) {
@@ -260,4 +292,3 @@ public class SlideShowView extends AppCompatActivity {
     }
 
 }
-

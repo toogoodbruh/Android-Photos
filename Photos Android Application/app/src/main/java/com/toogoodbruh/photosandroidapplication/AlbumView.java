@@ -295,10 +295,15 @@ public class AlbumView extends AppCompatActivity {
                     }
 
                 }
-                if (str.equals("")) {
-                    str = u.toString();
+                if (u != null) {
+                    Log.d("Write", "Photo: " + u.toString());
+                    if (str.equals("")) {
+                        str = u.toString();
+                    } else {
+                        str = str + "\n" + u.toString();
+                    }
                 } else {
-                    str = str + "\n" + u.toString();
+                    Log.e("Write", "Photo is null");
                 }
             }
 
@@ -312,6 +317,7 @@ public class AlbumView extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
 
     /**
      * Determines which button is visible to the user
