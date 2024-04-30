@@ -29,9 +29,9 @@ public class EditAlbum extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_album);
 
-        final EditText albumName =  (EditText) findViewById(R.id.albumName);
-        Button createButton =  (Button) findViewById(R.id.create),
-        backButton = (Button) findViewById(R.id.cancel);
+        final EditText albumName = findViewById(R.id.albumName);
+        Button createButton = findViewById(R.id.create),
+        backButton = findViewById(R.id.cancel);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

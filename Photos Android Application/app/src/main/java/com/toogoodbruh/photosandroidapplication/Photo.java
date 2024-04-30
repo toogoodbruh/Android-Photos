@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class Photo implements Serializable {
     public ArrayList<Tag> tags = new ArrayList<Tag>();
-    private Uri uri;
+    private final Uri uri;
 
 
     public Photo(Uri uri) {
@@ -17,14 +17,16 @@ public class Photo implements Serializable {
 
     public void addTag(String type, String data){
         tags.add(new Tag(type, data));
-        return;
+    }
+
+    public ArrayList<Tag> getTags() {
+        return tags;
     }
 
     public void addTag(String tag){
         String data = tag.substring(tag.indexOf("=")+1);
         tag = tag.substring(0,tag.indexOf("="));
         tags.add(new Tag(tag, data));
-        return;
     }
 
     public Uri getUri() {

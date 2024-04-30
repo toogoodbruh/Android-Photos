@@ -26,8 +26,8 @@ public class Search extends AppCompatActivity {
     private EditText tagData;
     private Button search, cancel;
     private int type = -1;
-    private static ArrayList<Photo> searched = new ArrayList<>();
-    private static ArrayList<Photo> sList = new ArrayList<>();
+    private static final ArrayList<Photo> searched = new ArrayList<>();
+    private static final ArrayList<Photo> sList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,14 +35,14 @@ public class Search extends AppCompatActivity {
         setContentView(R.layout.activity_search);
 
 
-        rg = (RadioGroup) findViewById(R.id.radiogroup);
+        rg = findViewById(R.id.radiogroup);
 
-        loc = (RadioButton) findViewById(R.id.location);
-        person = (RadioButton) findViewById(R.id.person);
+        loc = findViewById(R.id.location);
+        person = findViewById(R.id.person);
 
-        tagData = (EditText) findViewById(R.id.data);
-        search = (Button) findViewById(R.id.search);
-        cancel = (Button) findViewById(R.id.cancel);
+        tagData = findViewById(R.id.data);
+        search = findViewById(R.id.search);
+        cancel = findViewById(R.id.cancel);
 
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,7 +133,7 @@ public class Search extends AppCompatActivity {
                     Photo photo = null; // Initialize a Photo object
 
                     while ((lineIn = bufferedReader2.readLine()) != null) {
-                        if (lineIn.substring(0, 4).equals("TAG:")) {
+                        if (lineIn.startsWith("TAG:")) {
                             // Ensure a photo object is created before adding tags
                             if (photo != null) {
                                 photo.addTag(lineIn.substring(4));
@@ -178,7 +178,7 @@ public class Search extends AppCompatActivity {
                 }
                 for (Tag t : u.tags){
                     if (!tgs.contains(t.toString())) {
-                        str = str + "\nTAG:" + t.toString();
+                        str = str + "\nTAG:" + t;
                         tgs.add(t.toString());
                     }
                 }

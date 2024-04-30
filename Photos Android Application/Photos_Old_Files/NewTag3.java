@@ -1,8 +1,6 @@
 package com.toogoodbruh.photosandroidapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -11,6 +9,10 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 import android.util.Log;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class NewTag extends AppCompatActivity {
+    private static final int PERMISSION_REQUEST_CODE = 100;
     private RadioButton loc, person;
     private RadioGroup rg;
     private EditText tagData;
@@ -28,6 +31,22 @@ public class NewTag extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_tag);
+
+        // Check for permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted, request it
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    PERMISSION_REQUEST_CODE);
+        } else {
+            // Permission is already granted, proceed with your code
+            // You can put your existing onCreate code here
+            initializeViews();
+        }
+    }
+    // Method to initialize views and set listeners
+    private void initializeViews() {
         Log.d("startup", "startup text");
         rg = (RadioGroup) findViewById(R.id.radiogroup);
 
@@ -48,28 +67,10 @@ public class NewTag extends AppCompatActivity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Retrieve the tag data from the EditText field
-                String tagDataText = tagData.getText().toString();
-                if (!tagDataText.equals("")) {
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra("tagData", tagDataText);
-                    setResult(RESULT_OK, resultIntent);
-                    finish();
-                }
-            }
-        });
-
-
-        /*send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
                 Log.d("NewTag", "Add tag button clicked"); // Add this log statement
                 ArrayList<String> tags = new ArrayList<>();
 
                 int index = SlideShowView.index; // Store the index in a local variable for debugging
-                // Log the index value
-                Log.d("NewTag", "Index value: " + index);
-
                 // Log the index value
                 Log.d("NewTag", "Index value: " + index);
 
@@ -93,7 +94,6 @@ public class NewTag extends AppCompatActivity {
                                 } else {
                                     AlbumView.imgAdapter.uris.get(index).addTag("Location=" + tagData.getText().toString());
                                     SlideShowView.tagAdapter.notifyDataSetChanged();
-                                    write();
                                     Log.d("NewTag", "Location tag added: " + tagData.getText().toString());
                                     setResult(RESULT_OK);
                                     finish();
@@ -106,9 +106,7 @@ public class NewTag extends AppCompatActivity {
                                 } else {
                                     AlbumView.imgAdapter.uris.get(index).addTag("Person=" + tagData.getText().toString());
                                     SlideShowView.tagAdapter.notifyDataSetChanged();
-                                    write();
                                     Log.d("NewTag", "Person tag added: " + tagData.getText().toString());
-                                    write();
                                     setResult(RESULT_OK);
                                     finish();
                                 }
@@ -116,46 +114,70 @@ public class NewTag extends AppCompatActivity {
                             default:
                                 break;
                         }
+
+                        // Call write() method here, outside the switch statement
+                        write();
                     }
                 } else {
                     Log.e("NewTag", "Invalid index value: " + index);
                 }
             }
         });
-
-         */
-
-
+    }
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            // Check if the permission is granted
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed with your code
+                // You can put your existing onCreate code here
+                initializeViews();
+            } else {
+                // Permission denied, show a message or handle it accordingly
+                Toast.makeText(this, "Permission denied, cannot enter tags", Toast.LENGTH_SHORT).show();
+                // Finish the activity or handle it in another way
+                finish();
+            }
+        }
     }
 
-    public void write(){
+    public void write() {
+        Log.d("NewTag write()", "entered");
+        FileOutputStream fileOutputStream = null;
         try {
+            Log.d("NewTag write()", "entered try{}");
             ArrayList<Photo> uris = AlbumView.imgAdapter.getPhotos();
-
-            FileOutputStream fileOutputStream = openFileOutput(HomeScreen.albumName + ".list", MODE_APPEND); // Open the file in append mode
+            fileOutputStream = openFileOutput(HomeScreen.albumName + ".list", MODE_APPEND);
 
             for (Photo u : uris) {
                 // Construct the string containing the URI and associated tags
-                String str = u.getUri().toString();
-                for (Tag t : u.tags){
-                    str = str + "\nTAG:" + t.toString();
+                StringBuilder strBuilder = new StringBuilder(u.getUri().toString());
+                for (Tag t : u.tags) {
+                    strBuilder.append("\nTAG:").append(t.toString());
                 }
+                String str = strBuilder.toString();
+
                 // Append the string to the file
                 fileOutputStream.write(str.getBytes());
                 fileOutputStream.write("\n".getBytes()); // Add a newline character to separate data for each photo
-                Log.d("write()", "Data appended: " + str);
+                Log.d("NewTag", "Data appended: " + str);
             }
 
             fileOutputStream.close(); // Close the file output stream
-        }
-        catch(FileNotFoundException e){
+        } catch (FileNotFoundException e) {
+            Log.d("NewTag write()", "FileNotFound");
             e.printStackTrace();
-        }
-        catch(ArrayIndexOutOfBoundsException e){
+        } catch (IOException e) {
+            Log.d("NewTag write()", "IOException");
             e.printStackTrace();
-        }
-        catch(IOException e){
-            e.printStackTrace();
+        } finally {
+            if (fileOutputStream != null) {
+                try {
+                    fileOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

@@ -146,7 +146,7 @@ public class AlbumView extends AppCompatActivity {
             public void onClick(View view) {
                 HomeScreen.isCopy = true;
                 paste.setVisibility(View.VISIBLE);
-                HomeScreen.copy = imgAdapter.uris.get(index);
+                HomeScreen.copy = ImageAdapter.uris.get(index);
             }
         });
 
@@ -156,7 +156,7 @@ public class AlbumView extends AppCompatActivity {
 
                 HomeScreen.isCopy = true;
                 paste.setVisibility(View.VISIBLE);
-                HomeScreen.copy = imgAdapter.uris.get(index);
+                HomeScreen.copy = ImageAdapter.uris.get(index);
                 imgAdapter.remove(index);
                 gridView.setAdapter(imgAdapter);
                 write();
@@ -194,7 +194,8 @@ public class AlbumView extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        Log.d("resultCode", String.valueOf(resultCode));
+        Log.d("requestCode" , String.valueOf(requestCode));
         if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             // Ensure imgAdapter is initialized
             if (imgAdapter == null) {
@@ -296,11 +297,11 @@ public class AlbumView extends AppCompatActivity {
 
                 }
                 if (u != null) {
-                    Log.d("Write", "Photo: " + u.toString());
+                    Log.d("Write", "Photo: " + u);
                     if (str.equals("")) {
                         str = u.toString();
                     } else {
-                        str = str + "\n" + u.toString();
+                        str = str + "\n" + u;
                     }
                 } else {
                     Log.e("Write", "Photo is null");

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 
 public class ImageAdapter extends BaseAdapter {
-    private Context context;
+    private final Context context;
 
 
     public static ArrayList<Photo> uris = new ArrayList<>();

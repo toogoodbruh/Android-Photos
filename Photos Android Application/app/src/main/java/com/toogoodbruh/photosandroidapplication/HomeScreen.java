@@ -29,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /*public class HomeScreen extends AppCompatActivity {
 
@@ -67,21 +68,19 @@ public class HomeScreen extends AppCompatActivity {
 
 
 
-        gridView = (GridView) findViewById(R.id.gridView1);
-        search = (Button) findViewById(R.id.search);
-        newButton = (Button) findViewById(R.id.newButton);
-        open = (Button) findViewById(R.id.open);
-        delete = (Button) findViewById(R.id.delete);
-        rename = (Button) findViewById(R.id.rename);
+        gridView = findViewById(R.id.gridView1);
+        search = findViewById(R.id.search);
+        newButton = findViewById(R.id.newButton);
+        open = findViewById(R.id.open);
+        delete = findViewById(R.id.delete);
+        rename = findViewById(R.id.rename);
         open.setVisibility(View.INVISIBLE);
         delete.setVisibility(View.INVISIBLE);
         rename.setVisibility(View.INVISIBLE);
 
         isCopy = false;
 
-        for (String s:read()) {
-            albums.add(s);
-        }
+        Collections.addAll(albums, read());
 
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, albums);
@@ -108,9 +107,7 @@ public class HomeScreen extends AppCompatActivity {
 
                     write();
                     albums.clear();
-                    for (String s : read()) {
-                        albums.add(s);
-                    }
+                    Collections.addAll(albums, read());
 
                     ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),
                             android.R.layout.simple_list_item_1, albums);
@@ -206,9 +203,7 @@ public class HomeScreen extends AppCompatActivity {
         String[] newAlbums = read();
         // Add the new albums to the list
         if (newAlbums != null) {
-            for (String album : newAlbums) {
-                albums.add(album);
-            }
+            Collections.addAll(albums, newAlbums);
         }
         // Update the GridView adapter
         ((ArrayAdapter<String>) gridView.getAdapter()).notifyDataSetChanged();

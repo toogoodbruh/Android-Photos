@@ -1,13 +1,18 @@
 package com.toogoodbruh.photosandroidapplication;
 
-
-
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.annotation.NonNull;
+import android.Manifest;
 
+
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -18,8 +23,7 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-
+import android.widget.Toast;
 
 
 import java.io.FileNotFoundException;
@@ -31,6 +35,9 @@ import java.util.ArrayList;
 
 public class SlideShowView extends AppCompatActivity {
     private TextView tagTextView;
+    public static final int RESULT_CODE = 100;
+
+    private static final int PERMISSION_REQUEST_CODE = 100;
     public static int index;
     private int tagIndex = -1;
     public static Button add;
@@ -44,33 +51,53 @@ public class SlideShowView extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (AlbumView.imgAdapter.uris.get(index).tags.size() == 0) {
+        // Initialize the delete button
+        delete = findViewById(R.id.Del_Tag);
+
+        if (ImageAdapter.uris != null && index < ImageAdapter.uris.size() && ImageAdapter.uris.get(index).tags.size() == 0) {
+            //delete.setVisibility(View.INVISIBLE);
             delete.setVisibility(View.INVISIBLE);
         } else {
-
             delete.setVisibility(View.VISIBLE);
         }
     }
 
-
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_slide_show_view);
 
+        // Check for permissions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Request the READ_EXTERNAL_STORAGE permission on devices running Android 6.0 (API level 23) and above
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Permission is not granted, request it
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        PERMISSION_REQUEST_CODE);
+            } else {
+                // Permission is already granted, proceed with your code
+                initializeViews();
+            }
+        } else {
+            // For versions below Android 6.0, no specific permission is needed for reading from external storage
+            initializeViews();
+        }
+    }
+    // Method to initialize views and set listeners
+    private void initializeViews() {
         // Set up the toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Enable the back button
         index = AlbumView.index;
 
-        imgView = (ImageView) findViewById(R.id.imageView);
+        imgView = findViewById(R.id.imageView);
         tagTextView = findViewById(R.id.tagTextView);
-        gridView = (GridView) findViewById(R.id.gridView);
+        gridView = findViewById(R.id.gridView);
 
         updateTags();
-        tagAdapter = new ArrayAdapter<Tag>(this, android.R.layout.simple_list_item_1, AlbumView.imgAdapter.uris.get(index).tags);
+        tagAdapter = new ArrayAdapter<Tag>(this, android.R.layout.simple_list_item_1, ImageAdapter.uris.get(index).tags);
 
         gridView.setAdapter(tagAdapter);
 
@@ -81,12 +108,12 @@ public class SlideShowView extends AppCompatActivity {
             }
         });
 
-        prev = (Button) findViewById(R.id.prev);
-        next = (Button) findViewById(R.id.next);
-        add = (Button) findViewById(R.id.Add_Tag);
-        delete = (Button) findViewById(R.id.Del_Tag);
+        prev = findViewById(R.id.prev);
+        next = findViewById(R.id.next);
+        add = findViewById(R.id.Add_Tag);
+        delete = findViewById(R.id.Del_Tag);
 
-        if (AlbumView.imgAdapter.uris.get(index).tags.size() == 0) {
+        if (ImageAdapter.uris.get(index).tags.size() == 0) {
             delete.setVisibility(View.INVISIBLE);
         }
         else {
@@ -106,28 +133,26 @@ public class SlideShowView extends AppCompatActivity {
         }
 
         try {
-            InputStream pictureInputStream = getContentResolver().openInputStream(AlbumView.imgAdapter.uris.get(index).getUri());
+            InputStream pictureInputStream = getContentResolver().openInputStream(ImageAdapter.uris.get(index).getUri());
             Bitmap currPic = BitmapFactory.decodeStream(pictureInputStream);
             imgView.setImageBitmap(currPic);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        /*add.setOnClickListener(new View.OnClickListener() {
+        add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(SlideShowView.this, NewTag.class);
                 startActivityForResult(intent, 1); // Use startActivityForResult()
             }
         });
-
-         */
         prev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (index > 0) {
                     index--;
-                    if (AlbumView.imgAdapter.uris.get(index).tags.size() == 0) {
+                    if (ImageAdapter.uris.get(index).tags.size() == 0) {
                         delete.setVisibility(View.INVISIBLE);
                     } else {
                         delete.setVisibility(View.VISIBLE);
@@ -140,11 +165,11 @@ public class SlideShowView extends AppCompatActivity {
                         prev.setVisibility(View.INVISIBLE);
                     }
                     try {
-                        InputStream pictureInputStream = getContentResolver().openInputStream(AlbumView.imgAdapter.uris.get(index).getUri());
+                        InputStream pictureInputStream = getContentResolver().openInputStream(ImageAdapter.uris.get(index).getUri());
                         Bitmap currPic = BitmapFactory.decodeStream(pictureInputStream);
                         imgView.setImageBitmap(currPic);
 
-                        tagAdapter = new ArrayAdapter<Tag>(getApplicationContext(), android.R.layout.simple_list_item_1, AlbumView.imgAdapter.uris.get(index).tags);
+                        tagAdapter = new ArrayAdapter<Tag>(getApplicationContext(), android.R.layout.simple_list_item_1, ImageAdapter.uris.get(index).tags);
 
                         gridView.setAdapter(tagAdapter);
                     } catch (FileNotFoundException e2) {
@@ -159,7 +184,7 @@ public class SlideShowView extends AppCompatActivity {
             public void onClick(View view) {
                 if (index < AlbumView.imgAdapter.getCount() - 1) {
                     index++;
-                    if (AlbumView.imgAdapter.uris.get(index).tags.size() == 0) {
+                    if (ImageAdapter.uris.get(index).tags.size() == 0) {
                         delete.setVisibility(View.INVISIBLE);
                     } else {
                         delete.setVisibility(View.VISIBLE);
@@ -172,11 +197,11 @@ public class SlideShowView extends AppCompatActivity {
                         next.setVisibility(View.INVISIBLE);
                     }
                     try {
-                        InputStream pictureInputStream = getContentResolver().openInputStream(AlbumView.imgAdapter.uris.get(index).getUri());
+                        InputStream pictureInputStream = getContentResolver().openInputStream(ImageAdapter.uris.get(index).getUri());
                         Bitmap currPic = BitmapFactory.decodeStream(pictureInputStream);
                         imgView.setImageBitmap(currPic);
 
-                        tagAdapter = new ArrayAdapter<Tag>(getApplicationContext(), android.R.layout.simple_list_item_1, AlbumView.imgAdapter.uris.get(index).tags);
+                        tagAdapter = new ArrayAdapter<Tag>(getApplicationContext(), android.R.layout.simple_list_item_1, ImageAdapter.uris.get(index).tags);
 
                         gridView.setAdapter(tagAdapter);
                     } catch (FileNotFoundException e1) {
@@ -186,50 +211,49 @@ public class SlideShowView extends AppCompatActivity {
             }
         });
 
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), NewTag.class);
-                startActivity(intent);
-            }
-        });
 
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (tagIndex != -1) {
-                    AlbumView.imgAdapter.uris.get(index).tags.remove(tagIndex);
-                    tagAdapter = new ArrayAdapter<Tag>(getApplicationContext(), android.R.layout.simple_list_item_1, AlbumView.imgAdapter.uris.get(index).tags);
+                    ImageAdapter.uris.get(index).tags.remove(tagIndex);
+                    tagAdapter = new ArrayAdapter<Tag>(getApplicationContext(), android.R.layout.simple_list_item_1, ImageAdapter.uris.get(index).tags);
+
                     gridView.setAdapter(tagAdapter);
 
-                    write(); // Call the write method after a tag is deleted
+                    write();
                 }
 
-                if (AlbumView.imgAdapter.uris.get(index).tags.size() == 0) {
+                if (ImageAdapter.uris.get(index).tags.size() == 0) {
                     delete.setVisibility(View.INVISIBLE);
                 }
             }
         });
     }
-
-
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            // Check if the permission is granted
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed with your code
+                initializeViews();
+            } else {
+                // Permission denied, show a message or handle it accordingly
+                Toast.makeText(this, "Permission denied, cannot read data", Toast.LENGTH_SHORT).show();
+                // Finish the activity or handle it in another way
+                //finish();
+            }
+        }
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
-                // Retrieve the tag data from the intent
-                String tagData = data.getStringExtra("tagData");
-                if (tagData != null) {
-                    // Add the tag to the current photo
-                    AlbumView.imgAdapter.uris.get(index).addTag(tagData);
-                    // Update the UI to reflect the changes
-                    updateTags();
-
-                    // Call the write method to save the data
-                    write();
-                }
+                // Handle the result from NewTag activity if needed
+                // For example, you can update the UI or perform any other actions
+                write();
             }
         }
     }
@@ -262,15 +286,12 @@ public class SlideShowView extends AppCompatActivity {
         }
     }*/
     private void updateTags() {
-        Log.d("SlideShowView", "updateTags() called");
         // Check if there are tags associated with the current image
-        if (AlbumView.imgAdapter.uris.get(index).tags.size() > 0) {
+        if (ImageAdapter.uris.get(index).tags.size() > 0) {
             StringBuilder tagsBuilder = new StringBuilder("Tags:\n");
-            for (Tag tag : AlbumView.imgAdapter.uris.get(index).tags) {
+            for (Tag tag : ImageAdapter.uris.get(index).tags) {
                 tagsBuilder.append(tag.getData()).append("\n");
             }
-            // Log the tags for the current image
-            Log.d("SlideShowView", "Tags for current image: " + tagsBuilder.toString());
             // Set the text of the tag TextView
             tagTextView.setText(tagsBuilder.toString());
             tagTextView.setVisibility(View.VISIBLE);
@@ -278,69 +299,37 @@ public class SlideShowView extends AppCompatActivity {
             // If there are no tags, hide the tag TextView
             tagTextView.setVisibility(View.GONE);
         }
-
-        // Call the write method to save the data
-        write();
     }
+
     public void write() {
-        Log.d("SlideShowView write()", "method entered");
+        Log.d("SlideShowView write()", "entered method");
         try {
-            ArrayList<Photo> photos = AlbumView.imgAdapter.getPhotos();
+            Log.d("SlideShowView write()", "entered try{}");
+            ArrayList<Photo> uris = AlbumView.imgAdapter.getPhotos();
+            FileOutputStream fileOutputStream = openFileOutput(HomeScreen.albumName + ".list", MODE_PRIVATE);
 
-            FileOutputStream fileOutputStream = openFileOutput(HomeScreen.albumName + ".list", MODE_PRIVATE | MODE_APPEND); // Open the file in write mode, create if not exist
-
-            for (Photo photo : photos) {
-                String str = photo.getUri().toString(); // Start with the photo URI
-
-                // Append each tag associated with the photo
-                for (Tag tag : photo.getTags()) {
-                    str += "\nTAG:" + tag.getData();
+            for (Photo u : uris) {
+                // Construct the string containing the URI and associated tags
+                StringBuilder strBuilder = new StringBuilder(u.getUri().toString());
+                for (Tag t : u.tags) {
+                    strBuilder.append("\nTAG:").append(t.toString());
                 }
+                String str = strBuilder.toString();
 
-                // Append a newline character to separate data for each photo
-                str += "\n";
-
-                // Write the constructed string to the file
+                // Append the string to the file
                 fileOutputStream.write(str.getBytes());
-
-                Log.d("write()", "Data appended: " + str);
+                fileOutputStream.write("\n".getBytes()); // Add a newline character to separate data for each photo
+                Log.d("SlideShowView", "Data written: " + str);
             }
 
             fileOutputStream.close(); // Close the file output stream
+        } catch (FileNotFoundException e) {
+            Log.d("SlideShowView write()", "FileNotFound");
+            e.printStackTrace();
         } catch (IOException e) {
-            Log.d("write()", "Failed to append data");
+            Log.d("SlideShowView write()", "IOException");
             e.printStackTrace();
         }
     }
-
-
-    /*public void write(){
-        try {
-            ArrayList<Photo> uris = AlbumView.imgAdapter.getPhotos();
-            ArrayList<Tag> tags = new ArrayList<>();
-
-            String str = "";
-            FileOutputStream fileOutputStream = openFileOutput(HomeScreen.albumName+".list", MODE_PRIVATE);
-            for (Photo u : uris) {
-                if (str.equals("")) {
-                    str = u.toString();
-
-                } else {
-                    str = str + "\n" + u.toString();
-                }
-            }
-
-            fileOutputStream.write(str.getBytes());
-
-        }catch(FileNotFoundException e){
-            e.printStackTrace();
-        } catch(ArrayIndexOutOfBoundsException e){
-            e.printStackTrace();
-        } catch(IOException e){
-            e.printStackTrace();
-        }
-    }
-
-     */
 
 }
